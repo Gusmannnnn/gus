@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Te amo mi corazón</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.2/lib/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let hearts = [];
+        let flowers = [];
+        let tulips = [];
+        let stars = [];
+        let butterflies = [];
+        let showTextAndEmojis = false;
+        let textAlpha = 0;
+        let emojiAlpha = 0;
+        let animationStartTime = 0;
+        let button;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            background(255, 240, 245);
+
+            button = createButton('Hazme aparecer');
+            button.position(width / 2 - 75, height - height * 0.1); // 10% desde el borde inferior
+            button.size(150, 40);
+            button.style('background', 'linear-gradient(45deg, #ff6699, #ff99cc)');
+            button.style('border', 'none');
+            button.style('border-radius', '20px');
+            button.style('color', 'white');
+            button.style('font-family', 'Arial');
+            button.style('font-size', '16px');
+            button.style('cursor', 'pointer');
+            button.style('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.1)');
+            button.mousePressed(startAnimation);
+            button.mouseOver(() => button.style('background', 'linear-gradient(45deg, #ff4066, #ff80b3)'));
+            button.mouseOut(() => button.style('background', 'linear-gradient(45deg, #ff6699, #ff99cc)'));
+
+            for (let i = 0; i < 1; i++) {
+                hearts.push(new FloatingElement('♥', '#ff6699', random(25, 40), random(width), random(height), random(1, 2)));
+                flowers.push(new FloatingElement(random(['🌸', '🌷']), '#ff99cc', random(20, 35), random(width), random(height), random(1, 2)));
+                tulips.push(new FloatingElement('🌷', '#ff99cc', random(25, 40), random(width), random(height), random(1, 2)));
+                stars.push(new FloatingElement('★', '#ffd700', random(20, 30), random(width), random(height), random(1, 2)));
+                butterflies.push(new FloatingElement('🦋', '#98fb98', random(25, 35), random(width), random(height), random(1, 2)));
+            }
+        }
+
+        function draw() {
+            drawBackgroundWithGradient();
+
+            if (showTextAndEmojis) {
+                let elapsed = (millis() - animationStartTime) / 1000;
+                textAlpha = min(elapsed * 1.5, 1);
+                emojiAlpha = min(elapsed * 1.5, 1);
+                
+                drawTextWithImprovedClarity(textAlpha);
+                spawnEmojis(emojiAlpha);
+            }
+
+            let mouse = createVector(mouseX, mouseY);
+
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                hearts[i].update(mouse);
+                hearts[i].display();
+                if (hearts[i].isOffScreen()) hearts.splice(i, 1);
+            }
+
+            for (let i = flowers.length - 1; i >= 0; i--) {
+                flowers[i].update(mouse);
+                flowers[i].display();
+                if (flowers[i].isOffScreen()) flowers.splice(i, 1);
+            }
+
+            for (let i = tulips.length - 1; i >= 0; i--) {
+                tulips[i].update(mouse);
+                tulips[i].display();
+                if (tulips[i].isOffScreen()) tulips.splice(i, 1);
+            }
+
+            for (let i = stars.length - 1; i >= 0; i--) {
+                stars[i].update(mouse);
+                stars[i].display();
+                if (stars[i].isOffScreen()) stars.splice(i, 1);
+            }
+
+            for (let i = butterflies.length - 1; i >= 0; i--) {
+                butterflies[i].update(mouse);
+                butterflies[i].display();
+                if (butterflies[i].isOffScreen()) butterflies.splice(i, 1);
+            }
+        }
+
+        function startAnimation() {
+            showTextAndEmojis = true;
+            animationStartTime = millis();
+            hearts = [];
+            flowers = [];
+            tulips = [];
+            stars = [];
+            butterflies = [];
+        }
+
+        function spawnEmojis(alpha) {
+            if (frameCount % 20 === 0) {
+                let types = ['♥', '🌸', '🌷', '★', '🦋'];
+                let colors = ['#ff6699', '#ff99cc', '#ff99cc', '#ffd700', '#98fb98'];
+                let x = random(width);
+                let y = height;
+                let type = random(types);
+                let col = colors[types.indexOf(type)];
+                let size = random(25, 40);
+                let speed = random(1, 2);
+
+                if (type === '♥') hearts.push(new FloatingElement(type, col, size, x, y, speed));
+                else if (type === '🌸' || type === '🌷') flowers.push(new FloatingElement(type, col, size, x, y, speed));
+                else if (type === '🌷') tulips.push(new FloatingElement(type, col, size, x, y, speed));
+                else if (type === '★') stars.push(new FloatingElement(type, col, size, x, y, speed));
+                else if (type === '🦋') butterflies.push(new FloatingElement(type, col, size, x, y, speed));
+            }
+
+            for (let heart of hearts) heart.opacity = alpha * 255;
+            for (let flower of flowers) flower.opacity = alpha * 255;
+            for (let tulip of tulips) tulip.opacity = alpha * 255;
+            for (let star of stars) star.opacity = alpha * 255;
+            for (let butterfly of butterflies) butterfly.opacity = alpha * 255;
+        }
+
+        class FloatingElement {
+            constructor(symbol, col, size, x, y, speed) {
+                this.symbol = symbol;
+                this.col = color(col);
+                this.size = size;
+                this.x = x;
+                this.y = y;
+                this.speed = speed;
+                this.opacity = 0;
+                this.wobble = random(-0.5, 0.5);
+            }
+
+            update(mouse) {
+                this.y -= this.speed;
+                this.x += sin(frameCount * 0.01 + this.wobble) * 0.5;
+
+                let d = dist(this.x, this.y, mouse.x, mouse.y);
+                if (d < 80) {
+                    let angle = atan2(mouse.y - this.y, mouse.x - this.x);
+                    this.x += cos(angle) * 0.5;
+                    this.y += sin(angle) * 0.5;
+                    this.size = lerp(this.size, this.size * 1.05, 0.05);
+                } else {
+                    this.size = lerp(this.size, this.size * 0.99, 0.05);
+                }
+
+                if (this.y < -20) {
+                    this.y = height;
+                    this.x = random(width);
+                    this.opacity = 0;
+                }
+            }
+
+            display() {
+                push();
+                translate(this.x, this.y);
+                textSize(this.size);
+                fill(this.col, this.opacity);
+                noStroke();
+                textAlign(CENTER, CENTER);
+                text(this.symbol, 0, 0);
+                pop();
+            }
+
+            isOffScreen() {
+                return this.y < -20 || this.y > height + 20 || this.x < -20 || this.x > width + 20;
+            }
+        }
+
+        function drawBackgroundWithGradient() {
+            for (let y = 0; y < height; y++) {
+                let inter = map(y, 0, height, 0, 1);
+                let c = lerpColor(color(255, 240, 245), color(255, 230, 240), inter);
+                stroke(c);
+                line(0, y, width, y);
+            }
+
+            push();
+            noStroke();
+            fill(255, 182, 193, 10);
+            for (let i = 0; i < 3; i++) {
+                let x = random(width);
+                let y = random(height);
+                let size = random(30, 80);
+                let angle = frameCount * 0.005 + i;
+                ellipse(x + cos(angle) * 10, y + sin(angle) * 10, size, size);
+            }
+            pop();
+        }
+
+        function drawTextWithImprovedClarity(alpha) {
+            push();
+            textAlign(CENTER, CENTER);
+            textSize(64);
+            fill(255, 51, 102, alpha * 255);
+            textStyle(BOLD);
+            textFont('Arial');
+            text('Te amo mi corazón', width/2, height/2 - 40);
+
+            textSize(32);
+            fill(255, 153, 204, alpha * 255);
+            text('Perdón si no soy suficiente', width/2, height/2 + 40);
+            pop();
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+            button.position(width / 2 - 75, height - height * 0.1);
+        }
+    </script>
+</body>
+</html>
